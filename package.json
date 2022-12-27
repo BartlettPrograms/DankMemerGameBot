@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@nut-tree/nut-js": "^2.3.0"
+    "@nut-tree/nut-js": "^2.3.0",
+    "parse-png": "^2.1.0"
   }
 }
