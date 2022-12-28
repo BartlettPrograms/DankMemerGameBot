@@ -23,11 +23,13 @@ const posMessageBar = new Point(520, 1000);
 const posTotalPointsRight = new Point(465, 818);
 const posTotalPointsLeft = new Point(437, 818);
 const posStandButton = new Point(500, 890);
-const postHitButton = new Point(410, 890);
+const posHitButton = new Point(410, 890);
+const posPlayAgainButton = new Point(450, 930);
 //Regions
 const ScreenCapRegion = new Region(380, 905, 350, 50);
 //Timers
-const waitGameLoadTimer = 4000;
+const waitGameLoadTimer = 1000;
+const WaitMainLoopComplete = 100;
 const PauseTimer = 1000;
 
 // Methods
@@ -36,7 +38,7 @@ const typing = async (str) => {
   await mouse.move(straightTo(posMessageBar));
   await mouse.leftClick();
   await keyboard.type(str);
-  await sleep(1000);
+  await sleep(PauseTimer);
   await keyboard.type(Key.Enter);
 };
 
@@ -48,9 +50,9 @@ const startGame = async () => {
   await keyboard.type("5k");
   await keyboard.type(Key.Enter);
   await mouse.move(straightTo(posTotalPointsLeft));
-  await sleep(waitGameLoadTimer);
 };
-
+// Method to highlight and copy total card points
+// returns int of current points, or 0 if game has a game over response
 const GetPoints = async () => {
   await mouse.drag([posTotalPointsLeft, posTotalPointsRight]);
   await keyboard.pressKey(Key.LeftControl, Key.C);
@@ -63,29 +65,42 @@ const GetPoints = async () => {
   return 0;
 };
 
+const PlayAgain = async () => {
+  await mouse.move(straightTo(posPlayAgainButton));
+  await mouse.leftClick();
+  await mouse.move(straightTo(posTotalPointsLeft));
+  setTimeout(MainLoop, waitGameLoadTimer);
+};
+
 //Main Loop
-(async () => {
+const MainLoop = async () => {
   // If arg == -s start blackjack game
   if (process.argv[2] == "-s") {
     await startGame();
+    process.argv[2] = "";
   }
 
+  await sleep(waitGameLoadTimer);
   let points = await GetPoints();
-  console.log(points);
   if (points > 0) {
     // points are probably reasonable to work with
+    // Decide what move to make here
     if (points < 17) {
       // press Hit button
-      await mouse.move(straightTo(postHitButton));
+      await mouse.move(straightTo(posHitButton));
     } else if (points >= 17 && points <= 21) {
       // press Stand Button
       await mouse.move(straightTo(posStandButton));
     }
     await mouse.leftClick();
+    await mouse.move(straightTo(posTotalPointsLeft));
+    setTimeout(MainLoop, WaitMainLoopComplete);
+  } else {
+    // Most likely, game over
+    // Click Play again, then sleep and restart MainLoop()
+    PlayAgain();
   }
-  //press play again button
-  // Look for green play again button, if found
-  //{ press play again buton, restart loop }
-  // if no green win button
-  // Detect card number
-})();
+};
+
+//Start Execution here
+MainLoop();
